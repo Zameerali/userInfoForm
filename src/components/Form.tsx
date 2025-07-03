@@ -20,7 +20,7 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
       firstName: "",
       lastName: "",
       email: "",
-      phone: 0,
+      phone: "",
       streetAddress: "",
       city: "",
       region: "",
@@ -38,7 +38,7 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
         firstName: "",
         lastName: "",
         email: "",
-        phone: 0,
+        phone: "",
         streetAddress: "",
         city: "",
         region: "",
@@ -52,10 +52,18 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setUser((prevUser) => ({
-      ...prevUser,
-      [name]: name === "phone" ? Number(value.replace(/\D/g, "")) : value,
-    }));
+    if (name === "phone") {
+      const digitsOnly = value.replace(/\D/g, "");
+      setUser((prevUser) => ({
+        ...prevUser,
+        [name]: digitsOnly,
+      }));
+    } else {
+      setUser((prevUser) => ({
+        ...prevUser,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -71,7 +79,7 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
       firstName: "",
       lastName: "",
       email: "",
-      phone: 0,
+      phone: "",
       streetAddress: "",
       city: "",
       region: "",
@@ -166,12 +174,12 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                     type="tel"
                     name="phone"
                     id="phone"
-                    value={user.phone.toString()}
+                    value={user.phone}
                     onChange={handleChange}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
                     required
-                    pattern="\d{11}"
-                    title="Phone number must be 11 digits"
+                    pattern="\d{11,}"
+                    title="Phone number must be at least 11 digits"
                   />
                 </div>
 
