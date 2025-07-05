@@ -14,11 +14,37 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
+import TableSortLabel from "@mui/material/TableSortLabel";
 
+function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+  if (b[orderBy] < a[orderBy]) {
+    return -1;
+  }
+  if (b[orderBy] > a[orderBy]) {
+    return 1;
+  }
+  return 0;
+}
+
+type Order = "asc" | "desc";
+
+function getComparator<Key extends keyof any>(
+  order: Order,
+  orderBy: Key
+): (
+  a: { [key in Key]: number | string },
+  b: { [key in Key]: number | string }
+) => number {
+  return order === "desc"
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
+}
 function Users() {
   const users = useSelector((state: RootState) => state.user.users);
   const dispatch = useDispatch<AppDispatch>();
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [order, setOrder] = useState<Order>("asc");
+  const [orderBy, setOrderBy] = useState<keyof User>("firstName");
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
@@ -50,7 +76,13 @@ function Users() {
       border: 0,
     },
   }));
-  
+  const handleRequestSort = (property: keyof User) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  const sortedUsers = [...users].sort(getComparator(order, orderBy));
 
   return (
     <>
@@ -74,7 +106,27 @@ function Users() {
           <Table sx={{ minWidth: 700 }} aria-label="customized table">
             <TableHead>
               <TableRow>
-                <StyledTableCell>First Name</StyledTableCell>
+                <StyledTableCell>
+                  <TableSortLabel
+                    active={orderBy === "firstName"}
+                    direction={orderBy === "firstName" ? order : "asc"}
+                    onClick={() => handleRequestSort("firstName")}
+                    sx={{
+                      color: "white !important", 
+                      "& .MuiTableSortLabel-icon": {
+                        color: "white !important", 
+                      },
+                      "&.Mui-active": {
+                        color: "white !important",
+                        "& .MuiTableSortLabel-icon": {
+                          color: "white !important",
+                        },
+                      },
+                    }}
+                  >
+                    First Name
+                  </TableSortLabel>
+                </StyledTableCell>
                 <StyledTableCell align="center">Last Name</StyledTableCell>
                 <StyledTableCell align="center">Email</StyledTableCell>
                 <StyledTableCell align="center">Phone</StyledTableCell>
@@ -87,7 +139,7 @@ function Users() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
+              {sortedUsers.map((user) => (
                 <StyledTableRow key={user.id} sx={{}}>
                   <StyledTableCell component="th" scope="row">
                     {user.firstName}
