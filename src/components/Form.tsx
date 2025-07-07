@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { /* useState, */ useEffect } from "react";
 import type { User } from "../features/user/userType";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../app/store";
@@ -14,6 +14,12 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import "./Form.css";
+import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import InputLabel from "@mui/material/InputLabel";
+import FormControl from "@mui/material/FormControl";
+import { Controller } from "react-hook-form";
 
 type FormProps = {
   editingUser?: User | null;
@@ -36,6 +42,7 @@ const schema = yup
     postalCode: yup
       .number()
       .typeError("Must be a number")
+      .positive("Postal code must be a positive number")
       .required("Postal code required")
       .transform((val, oVal) => (String(oVal).trim() === "" ? undefined : val)),
     country: yup.string().required("Country name is required"),
@@ -46,25 +53,26 @@ type FormData = yup.InferType<typeof schema>;
 function Form({ editingUser, onFinishEdit }: FormProps) {
   const dispatch = useDispatch<AppDispatch>();
 
-  const [user, setUser] = useState<User>(
-    editingUser || {
-      id: Date.now(),
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      streetAddress: "",
-      city: "",
-      region: "",
-      postalCode: 0,
-      country: "",
-    }
-  );
+  // const [user, setUser] = useState<User>(
+  //   editingUser || {
+  //     id: Date.now(),
+  //     firstName: "",
+  //     lastName: "",
+  //     email: "",
+  //     phone: "",
+  //     streetAddress: "",
+  //     city: "",
+  //     region: "",
+  //     postalCode: 0,
+  //     country: "",
+  //   }
+  // );
   const {
-    register,
+    // register, 
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
   });
@@ -73,38 +81,38 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
     if (editingUser) {
       reset(editingUser, { keepErrors: false });
     } else {
-      setUser({
-        id: Date.now(),
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        streetAddress: "",
-        city: "",
-        region: "",
-        postalCode: 0,
-        country: "",
-      });
+      // setUser({
+      //   id: Date.now(),
+      //   firstName: "",
+      //   lastName: "",
+      //   email: "",
+      //   phone: "",
+      //   streetAddress: "",
+      //   city: "",
+      //   region: "",
+      //   postalCode: 0,
+      //   country: "",
+      // });
     }
   }, [editingUser, reset]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    if (name === "phone") {
-      const digitsOnly = value.replace(/\D/g, "");
-      setUser((prevUser) => ({
-        ...prevUser,
-        [name]: digitsOnly,
-      }));
-    } else {
-      setUser((prevUser) => ({
-        ...prevUser,
-        [name]: value,
-      }));
-    }
-  };
+  // const handleChange = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  // ) => {
+  //   const { name, value } = e.target;
+  //   if (name === "phone") {
+  //     const digitsOnly = value.replace(/\D/g, "");
+  //     setUser((prevUser) => ({
+  //       ...prevUser,
+  //       [name]: digitsOnly,
+  //     }));
+  //   } else {
+  //     setUser((prevUser) => ({
+  //       ...prevUser,
+  //       [name]: value,
+  //     }));
+  //   }
+  // };
 
   // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
   //   e.preventDefault();
@@ -161,9 +169,9 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
   const [open, setOpen] = React.useState(false);
   const [snackbarMsg, setSnackbarMsg] = React.useState("");
 
-  const handleClick = () => {
-    setOpen(true);
-  };
+  // const handleClick = () => {
+  //   setOpen(true);
+  // };
 
   const handleClose = (
     event: React.SyntheticEvent | Event,
@@ -197,235 +205,250 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
               </p>
 
               <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                {/* MUI Controller for firstName */}
                 <div className="sm:col-span-3">
-                  <label
-                    htmlFor="firstName"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    First name
-                  </label>
-                  <input
-                    type="text"
-                    // name="firstName"
-                    id="firstName"
-                    // value={user.firstName}
-                    // onChange={handleChange}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    {...register("firstName")}
+                  <Controller
+                    name="firstName"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="First Name"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.firstName}
+                        helperText={errors.firstName?.message}
+                      />
+                    )}
                   />
-
-                  {errors.firstName && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.firstName?.message}
-                    </p>
-                  )}
+                  {/*
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-900">First name</label>
+                  <input ... />
+                  {errors.firstName && (<p className="text-sm text-red-600 mt-1">{errors.firstName?.message}</p>)}
+                  */}
                 </div>
 
+                {/* MUI Controller for lastName */}
                 <div className="sm:col-span-3">
-                  <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    Last name
-                  </label>
-                  <input
-                    type="text"
-                    // name="lastName"
-                    id="lastName"
-                    // value={user.lastName}
-                    // onChange={handleChange}
-                    {...register("lastName")}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    // required
+                  <Controller
+                    name="lastName"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Last Name"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.lastName}
+                        helperText={errors.lastName?.message}
+                      />
+                    )}
                   />
-
-                  {errors.lastName && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.lastName?.message}
-                    </p>
-                  )}
+                  {/*
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-900">Last name</label>
+                  <input ... />
+                  {errors.lastName && (<p className="text-sm text-red-600 mt-1">{errors.lastName?.message}</p>)}
+                  */}
                 </div>
 
+                {/* MUI Controller for email */}
                 <div className="sm:col-span-4">
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    Email address
-                  </label>
-                  <input
-                    type="email"
-                    // name="email"
-                    id="email"
-                    // value={user.email}
-                    // onChange={handleChange}
-                    {...register("email")}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    // required
+                  <Controller
+                    name="email"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Email address"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.email}
+                        helperText={errors.email?.message}
+                      />
+                    )}
                   />
-
-                  {errors.email && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.email?.message}
-                    </p>
-                  )}
+                  {/*
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-900">Email address</label>
+                  <input ... />
+                  {errors.email && (<p className="text-sm text-red-600 mt-1">{errors.email?.message}</p>)}
+                  */}
                 </div>
 
+                {/* MUI Controller for phone */}
                 <div className="sm:col-span-4">
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    // name="phone"
-                    id="phone"
-                    // value={user.phone}
-                    // onChange={handleChange}
-                    {...register("phone")}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    // required
-                    // pattern="\d{11,}"
-                    // title="Phone number must be at least 11 digits"
+                  <Controller
+                    name="phone"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Phone"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.phone}
+                        helperText={errors.phone?.message}
+                        inputProps={{
+                          inputMode: "numeric",
+                          pattern: "\\d*",
+                        }}
+                        onChange={(e) => {
+                          // Only allow digits
+                          const digitsOnly = e.target.value.replace(/\D/g, "");
+                          field.onChange(digitsOnly);
+                        }}
+                        value={field.value}
+                      />
+                    )}
                   />
-
-                  {errors.phone && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.phone?.message}
-                    </p>
-                  )}
+                  {/*
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-900">Phone</label>
+                  <input ... />
+                  {errors.phone && (<p className="text-sm text-red-600 mt-1">{errors.phone?.message}</p>)}
+                  */}
                 </div>
 
+                {/* MUI Controller for country */}
                 <div className="sm:col-span-3">
-                  <label
-                    htmlFor="country"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    Country
-                  </label>
-                  <select
-                    // name="country"
-                    id="country"
-                    // value={user.country}
-                    // onChange={handleChange}
-                    {...register("country")}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    // required
-                  >
-                    <option value="">Select Country</option>
-                    <option>Pakistan</option>
-                    <option>United States</option>
-                    <option>Canada</option>
-                    <option>Mexico</option>
-                  </select>
-
-                  {errors.country && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.country?.message}
-                    </p>
-                  )}
+                  <Controller
+                    name="country"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <FormControl fullWidth error={!!errors.country}>
+                        <InputLabel id="country-label">Country</InputLabel>
+                        <Select
+                          {...field}
+                          labelId="country-label"
+                          label="Country"
+                        >
+                          <MenuItem value="">Select Country</MenuItem>
+                          <MenuItem value="Pakistan">Pakistan</MenuItem>
+                          <MenuItem value="United States">
+                            United States
+                          </MenuItem>
+                          <MenuItem value="Canada">Canada</MenuItem>
+                          <MenuItem value="Mexico">Mexico</MenuItem>
+                        </Select>
+                        {errors.country && (
+                          <p className="text-sm text-red-600 mt-1">
+                            {errors.country?.message}
+                          </p>
+                        )}
+                      </FormControl>
+                    )}
+                  />
+                  {/*
+                  <label htmlFor="country" className="block text-sm font-medium text-gray-900">Country</label>
+                  <select ... />
+                  {errors.country && (<p className="text-sm text-red-600 mt-1">{errors.country?.message}</p>)}
+                  */}
                 </div>
 
+                {/* MUI Controller for streetAddress */}
                 <div className="col-span-full">
-                  <label
-                    htmlFor="streetAddress"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    Street address
-                  </label>
-                  <input
-                    type="text"
-                    // name="streetAddress"
-                    id="streetAddress"
-                    // value={user.streetAddress}
-                    // onChange={handleChange}
-                    {...register("streetAddress")}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    // required
+                  <Controller
+                    name="streetAddress"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Street address"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.streetAddress}
+                        helperText={errors.streetAddress?.message}
+                      />
+                    )}
                   />
-
-                  {errors.streetAddress && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.streetAddress?.message}
-                    </p>
-                  )}
+                  {/*
+                  <label htmlFor="streetAddress" className="block text-sm font-medium text-gray-900">Street address</label>
+                  <input ... />
+                  {errors.streetAddress && (<p className="text-sm text-red-600 mt-1">{errors.streetAddress?.message}</p>)}
+                  */}
                 </div>
 
+                {/* MUI Controller for city */}
                 <div className="sm:col-span-2">
-                  <label
-                    htmlFor="city"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    // name="city"
-                    id="city"
-                    // value={user.city}
-                    // onChange={handleChange}
-                    {...register("city")}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    // required
+                  <Controller
+                    name="city"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="City"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.city}
+                        helperText={errors.city?.message}
+                      />
+                    )}
                   />
-
-                  {errors.city && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.city?.message}
-                    </p>
-                  )}
+                  {/*
+                  <label htmlFor="city" className="block text-sm font-medium text-gray-900">City</label>
+                  <input ... />
+                  {errors.city && (<p className="text-sm text-red-600 mt-1">{errors.city?.message}</p>)}
+                  */}
                 </div>
 
+                {/* MUI Controller for region */}
                 <div className="sm:col-span-2">
-                  <label
-                    htmlFor="region"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    Region
-                  </label>
-                  <input
-                    type="text"
-                    // name="region"
-                    id="region"
-                    // value={user.region}
-                    // onChange={handleChange}
-                    {...register("region")}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    // required
+                  <Controller
+                    name="region"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Region"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.region}
+                        helperText={errors.region?.message}
+                      />
+                    )}
                   />
-
-                  {errors.region && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.region?.message}
-                    </p>
-                  )}
+                  {/*
+                  <label htmlFor="region" className="block text-sm font-medium text-gray-900">Region</label>
+                  <input ... />
+                  {errors.region && (<p className="text-sm text-red-600 mt-1">{errors.region?.message}</p>)}
+                  */}
                 </div>
 
+                {/* MUI Controller for postalCode */}
                 <div className="sm:col-span-2">
-                  <label
-                    htmlFor="postalCode"
-                    className="block text-sm font-medium text-gray-900"
-                  >
-                    Postal Code
-                  </label>
-                  <input
-                    type="text"
-                    // name="postalCode"
-                    id="postalCode"
-                    // value={user.postalCode.toString()}
-                    // onChange={handleChange}
-                    {...register("postalCode")}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    // required
+                  <Controller
+                    name="postalCode"
+                    control={control}
+                    defaultValue={0}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Postal Code"
+                        variant="outlined"
+                        fullWidth
+                        error={!!errors.postalCode}
+                        helperText={errors.postalCode?.message}
+                        inputProps={{ inputMode: "numeric", pattern: "\\d*" }}
+                        onChange={(e) => {
+                          // Only allow digits
+                          const digitsOnly = e.target.value.replace(/\D/g, "");
+                          field.onChange(digitsOnly);
+                        }}
+                        value={field.value}
+                      />
+                    )}
                   />
-
-                  {errors.postalCode && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.postalCode?.message}
-                    </p>
-                  )}
+                  {/*
+                  <label htmlFor="postalCode" className="block text-sm font-medium text-gray-900">Postal Code</label>
+                  <input ... />
+                  {errors.postalCode && (<p className="text-sm text-red-600 mt-1">{errors.postalCode?.message}</p>)}
+                  */}
                 </div>
               </div>
             </div>
