@@ -68,7 +68,7 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
   //   }
   // );
   const {
-    // register, 
+    // register,
     handleSubmit,
     formState: { errors },
     reset,
