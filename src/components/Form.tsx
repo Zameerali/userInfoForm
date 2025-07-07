@@ -4,6 +4,8 @@ import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../app/store";
 import { addUser, updateUser } from "../features/user/userSlice";
 import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
+import type { SnackbarCloseReason } from "@mui/material/Snackbar";
 import "./Form.css";
 
 type FormProps = {
@@ -71,9 +73,12 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
     if (editingUser) {
       dispatch(updateUser(user));
       if (onFinishEdit) onFinishEdit();
+      setSnackbarMsg("User updated successfully!");
     } else {
       dispatch(addUser(user));
+      setSnackbarMsg("User created successfully!");
     }
+    setOpen(true);
     setUser({
       id: Date.now(),
       firstName: "",
@@ -86,6 +91,23 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
       postalCode: "",
       country: "",
     });
+  };
+  const [open, setOpen] = React.useState(false);
+  const [snackbarMsg, setSnackbarMsg] = React.useState("");
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (
+    event: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
   };
 
   return (
@@ -296,6 +318,17 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
             >
               {editingUser ? "Update" : "Save"}
             </Button>
+            <Snackbar
+              open={open}
+              autoHideDuration={5000}
+              onClose={handleClose}
+              message={snackbarMsg}
+              // action={
+              //   <Button color="inherit" onClick={handleClose}>
+              //     Close
+              //   </Button>
+              //}
+            />
           </div>
         </form>
       </div>

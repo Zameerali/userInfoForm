@@ -15,6 +15,8 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import TableSortLabel from "@mui/material/TableSortLabel";
+import Snackbar from "@mui/material/Snackbar";
+import type { SnackbarCloseReason } from "@mui/material/Snackbar";
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -45,6 +47,7 @@ function Users() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<keyof User>("firstName");
+  const [open, setOpen] = useState(false);
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
@@ -52,12 +55,22 @@ function Users() {
 
   const handleDelete = (id: number) => {
     dispatch(deleteUser(id));
+    setOpen(true);
   };
 
   const handleFinishEdit = () => {
     setEditingUser(null);
   };
+  const handleClose = (
+    event: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
 
+    setOpen(false);
+  };
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: theme.palette.common.black,
@@ -112,9 +125,9 @@ function Users() {
                     direction={orderBy === "firstName" ? order : "asc"}
                     onClick={() => handleRequestSort("firstName")}
                     sx={{
-                      color: "white !important", 
+                      color: "white !important",
                       "& .MuiTableSortLabel-icon": {
-                        color: "white !important", 
+                        color: "white !important",
                       },
                       "&.Mui-active": {
                         color: "white !important",
@@ -179,6 +192,12 @@ function Users() {
                       >
                         Delete
                       </Button>
+                      <Snackbar
+                        open={open}
+                        autoHideDuration={6000}
+                        onClose={handleClose}
+                        message="User deleted successfully"
+                      />
                     </div>
                   </StyledTableCell>
                 </StyledTableRow>
