@@ -398,7 +398,7 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
 
                   {errors.region && (
                     <p className="text-sm text-red-600 mt-1">
-                      {errors.firstName?.message}
+                      {errors.region?.message}
                     </p>
                   )}
                 </div>
