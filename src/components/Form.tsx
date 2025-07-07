@@ -2,10 +2,17 @@ import React, { useState, useEffect } from "react";
 import type { User } from "../features/user/userType";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../app/store";
-import { addUser, updateUser } from "../features/user/userSlice";
+import {
+  addUser,
+  resetUserState,
+  updateUser,
+} from "../features/user/userSlice";
 import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 import type { SnackbarCloseReason } from "@mui/material/Snackbar";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import "./Form.css";
 
 type FormProps = {
@@ -13,6 +20,29 @@ type FormProps = {
   onFinishEdit?: () => void;
 };
 
+const schema = yup
+  .object({
+    firstName: yup.string().required("First Name is requried"),
+    lastName: yup.string().required("Last Name is required"),
+    email: yup.string().email().required("Email is required"),
+    phone: yup
+      .string()
+      .transform((val) => val.replace(/\D/g, ""))
+      .min(10, "Phone number must be at least 11 digits")
+      .required("Phone number is required"),
+    streetAddress: yup.string().required("Address is required"),
+    city: yup.string().required("City name is required"),
+    region: yup.string().required("Region is required"),
+    postalCode: yup
+      .number()
+      .typeError("Must be a number")
+      .required("Postal code required")
+      .transform((val, oVal) => (String(oVal).trim() === "" ? undefined : val)),
+    country: yup.string().required("Country name is required"),
+  })
+  .required();
+
+type FormData = yup.InferType<typeof schema>;
 function Form({ editingUser, onFinishEdit }: FormProps) {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -26,14 +56,22 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
       streetAddress: "",
       city: "",
       region: "",
-      postalCode: "",
+      postalCode: 0,
       country: "",
     }
   );
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+  });
 
   useEffect(() => {
     if (editingUser) {
-      setUser(editingUser);
+      reset(editingUser, { keepErrors: false });
     } else {
       setUser({
         id: Date.now(),
@@ -44,11 +82,11 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
         streetAddress: "",
         city: "",
         region: "",
-        postalCode: "",
+        postalCode: 0,
         country: "",
       });
     }
-  }, [editingUser]);
+  }, [editingUser, reset]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -68,29 +106,57 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   if (editingUser) {
+  //     dispatch(updateUser(user));
+  //     if (onFinishEdit) onFinishEdit();
+  //     setSnackbarMsg("User updated successfully!");
+  //   } else {
+  //     dispatch(addUser(user));
+  //     setSnackbarMsg("User created successfully!");
+  //   }
+  //   setOpen(true);
+  //   setUser({
+  //     id: Date.now(),
+  //     firstName: "",
+  //     lastName: "",
+  //     email: "",
+  //     phone: "",
+  //     streetAddress: "",
+  //     city: "",
+  //     region: "",
+  //     postalCode: 0,
+  //     country: "",
+  //   });
+  // };
+
+  const onSubmit = (data: FormData) => {
+    const user = editingUser
+      ? { ...editingUser, ...data }
+      : { id: Date.now(), ...data };
     if (editingUser) {
       dispatch(updateUser(user));
       if (onFinishEdit) onFinishEdit();
-      setSnackbarMsg("User updated successfully!");
+      setSnackbarMsg("User updated successfully");
+      reset({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        streetAddress: "",
+        city: "",
+        region: "",
+        postalCode: 0,
+        country: "",
+      });
     } else {
       dispatch(addUser(user));
-      setSnackbarMsg("User created successfully!");
+      setSnackbarMsg("User Created Successfully");
     }
     setOpen(true);
-    setUser({
-      id: Date.now(),
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      streetAddress: "",
-      city: "",
-      region: "",
-      postalCode: "",
-      country: "",
-    });
+    // dispatch(resetUserState());
+    reset();
   };
   const [open, setOpen] = React.useState(false);
   const [snackbarMsg, setSnackbarMsg] = React.useState("");
@@ -120,7 +186,7 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
         </div>
       </div>
       <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-lg mt-10">
-        <form onSubmit={handleSubmit} className="user-form">
+        <form onSubmit={handleSubmit(onSubmit)} className="user-form">
           <div className="space-y-12">
             <div className="border-b border-gray-900/10 pb-12">
               <h2 className="text-base/7 font-semibold text-gray-900">
@@ -140,13 +206,19 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                   </label>
                   <input
                     type="text"
-                    name="firstName"
+                    // name="firstName"
                     id="firstName"
-                    value={user.firstName}
-                    onChange={handleChange}
+                    // value={user.firstName}
+                    // onChange={handleChange}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
+                    {...register("firstName")}
                   />
+
+                  {errors.firstName && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.firstName?.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-3">
@@ -158,13 +230,20 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                   </label>
                   <input
                     type="text"
-                    name="lastName"
+                    // name="lastName"
                     id="lastName"
-                    value={user.lastName}
-                    onChange={handleChange}
+                    // value={user.lastName}
+                    // onChange={handleChange}
+                    {...register("lastName")}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
+                    // required
                   />
+
+                  {errors.lastName && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.lastName?.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-4">
@@ -176,13 +255,20 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                   </label>
                   <input
                     type="email"
-                    name="email"
+                    // name="email"
                     id="email"
-                    value={user.email}
-                    onChange={handleChange}
+                    // value={user.email}
+                    // onChange={handleChange}
+                    {...register("email")}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
+                    // required
                   />
+
+                  {errors.email && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.email?.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-4">
@@ -194,15 +280,22 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                   </label>
                   <input
                     type="tel"
-                    name="phone"
+                    // name="phone"
                     id="phone"
-                    value={user.phone}
-                    onChange={handleChange}
+                    // value={user.phone}
+                    // onChange={handleChange}
+                    {...register("phone")}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
-                    pattern="\d{11,}"
-                    title="Phone number must be at least 11 digits"
+                    // required
+                    // pattern="\d{11,}"
+                    // title="Phone number must be at least 11 digits"
                   />
+
+                  {errors.phone && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.phone?.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-3">
@@ -213,12 +306,13 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                     Country
                   </label>
                   <select
-                    name="country"
+                    // name="country"
                     id="country"
-                    value={user.country}
-                    onChange={handleChange}
+                    // value={user.country}
+                    // onChange={handleChange}
+                    {...register("country")}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
+                    // required
                   >
                     <option value="">Select Country</option>
                     <option>Pakistan</option>
@@ -226,6 +320,12 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                     <option>Canada</option>
                     <option>Mexico</option>
                   </select>
+
+                  {errors.country && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.country?.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="col-span-full">
@@ -237,13 +337,20 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                   </label>
                   <input
                     type="text"
-                    name="streetAddress"
+                    // name="streetAddress"
                     id="streetAddress"
-                    value={user.streetAddress}
-                    onChange={handleChange}
+                    // value={user.streetAddress}
+                    // onChange={handleChange}
+                    {...register("streetAddress")}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
+                    // required
                   />
+
+                  {errors.streetAddress && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.streetAddress?.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">
@@ -255,13 +362,20 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                   </label>
                   <input
                     type="text"
-                    name="city"
+                    // name="city"
                     id="city"
-                    value={user.city}
-                    onChange={handleChange}
+                    // value={user.city}
+                    // onChange={handleChange}
+                    {...register("city")}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
+                    // required
                   />
+
+                  {errors.city && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.city?.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">
@@ -273,13 +387,20 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                   </label>
                   <input
                     type="text"
-                    name="region"
+                    // name="region"
                     id="region"
-                    value={user.region}
-                    onChange={handleChange}
+                    // value={user.region}
+                    // onChange={handleChange}
+                    {...register("region")}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
+                    // required
                   />
+
+                  {errors.region && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.firstName?.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">
@@ -291,13 +412,20 @@ function Form({ editingUser, onFinishEdit }: FormProps) {
                   </label>
                   <input
                     type="text"
-                    name="postalCode"
+                    // name="postalCode"
                     id="postalCode"
-                    value={user.postalCode}
-                    onChange={handleChange}
+                    // value={user.postalCode.toString()}
+                    // onChange={handleChange}
+                    {...register("postalCode")}
                     className="block w-full rounded-md border border-gray-300 px-3 py-1.5 text-gray-900"
-                    required
+                    // required
                   />
+
+                  {errors.postalCode && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.postalCode?.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

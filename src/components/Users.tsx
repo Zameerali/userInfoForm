@@ -48,13 +48,14 @@ function Users() {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<keyof User>("firstName");
   const [open, setOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
   };
-
   const handleDelete = (id: number) => {
     dispatch(deleteUser(id));
+    setSnackbarMessage("User deleted successfully");
     setOpen(true);
   };
 
@@ -192,16 +193,16 @@ function Users() {
                       >
                         Delete
                       </Button>
-                      <Snackbar
-                        open={open}
-                        autoHideDuration={6000}
-                        onClose={handleClose}
-                        message="User deleted successfully"
-                      />
                     </div>
                   </StyledTableCell>
                 </StyledTableRow>
               ))}
+              <Snackbar
+                open={open}
+                autoHideDuration={5000}
+                onClose={handleClose}
+                message={snackbarMessage}
+              />
             </TableBody>
           </Table>
         </TableContainer>
